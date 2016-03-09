@@ -1,6 +1,6 @@
 #include "Server.h"
 
-int main(int argc, char **argv){
+int main(){
     Server server;
     server.Start();
     return 0;
