@@ -68,10 +68,32 @@ void Client::Start(){
                     exit(-1);
                 }
             } 
+        }
     }else{
         close(pipe_fd[1]);
         while(isClientWork){
-             
+            int epoll_events_count = epoll_wait(epfd, events, 2, -1);
+            for(int i = 0; i < epoll_events_count; ++i){
+                bzero(&message, BUF_SIZE);
+                if(events[i].data.fd == sock){
+                    int ret = recv(sock, message, BUF_SIZE, 0);
+                    if(ret == 0){
+                        cout << "Server closed connection: " << sock << endl;
+                        close(sock);
+                        isClientWork = 0;
+                    }else{
+                        cout << message << endl;
+                    } 
+                }
+                else{
+                    int ret = read(events[i].data.fd, message, BUF_SIZE);
+                    if(ret == 0)
+                        isClientWork = 0;
+                    else
+                        send(sock, message, BUF_SIZE, 0);
+                }
+            } 
         }
     }
+    Close();
 }
