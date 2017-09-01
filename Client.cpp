@@ -4,7 +4,7 @@ using namespace std;
 
 Client::Client(const char *addrstr):sockfd(0), pid(0), epfd(0){
     isClientWork = true;
-
+    // initialize the structure
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(SERVER_PORT);
     int ret = inet_aton(addrstr, &serv_addr.sin_addr);
@@ -34,7 +34,7 @@ void Client::Close(){
         close(pipe_fd[0]);
         close(sockfd);
     }
-    else
+    else    // in child process
         close(pipe_fd[1]);
 }
 
@@ -42,12 +42,12 @@ void Client::Start(){
     static struct epoll_event events[2];
     Connect();
     pid = fork();
-    if(pid < 0){
+    if(pid < 0){    // fork child process failed
         close(sockfd);
         err_die("fork error");
     }
-    else if(pid == 0){
-        close(pipe_fd[0]);
+    else if(pid == 0){    // in child process
+        close(pipe_fd[0]);    // Close the read pipe
         cout << "Please input 'EXIT' to exit the chat room." << endl;
         while(isClientWork){
             bzero(&message, BUF_SIZE);
@@ -55,7 +55,7 @@ void Client::Start(){
             if(strncasecmp(message, EXIT, strlen(EXIT)) == 0)
                 isClientWork = 0;
             else{
-                if(write(pipe_fd[1], message, strlen(message) - 1) < 0)
+                if(writen(pipe_fd[1], message, strlen(message) - 1) < 0)    // write to pipe
                     err_die("write error");
             }
         }
